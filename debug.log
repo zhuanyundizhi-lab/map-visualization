@@ -1,0 +1,17 @@
+[15168:15012:0418/113505.579:WARNING:t_skinfilemap.cpp(63)] SGRenderLog:CheckUpdate newMem.OpenMem Suc, szNewMem:Local\sgime_skin.v3.filemap.sogouime
+[15168:15012:0418/113505.579:WARNING:t_skinfilemap.cpp(65)] SGRenderLog:CheckUpdate finish: old version:1
+[15168:15012:0418/113505.579:WARNING:t_skinfilemap.cpp(67)] SGRenderLog:CheckUpdate finish: new version:3
+[15168:15012:0418/113505.619:WARNING:t_skinfilemap.cpp(63)] SGRenderLog:CheckUpdate newMem.OpenMem Suc, szNewMem:Local\sgime_skin.Dpi120.v3.filemap.sogouime
+[15168:15012:0418/113505.619:WARNING:t_skinfilemap.cpp(65)] SGRenderLog:CheckUpdate finish: old version:3
+[15168:15012:0418/113505.619:WARNING:t_skinfilemap.cpp(67)] SGRenderLog:CheckUpdate finish: new version:3
+[0418/113506.267:ERROR:gpu\ipc\service\gles2_command_buffer_stub.cc:109] ContextResult::kFatalFailure: fail_if_major_perf_caveat + software gl
+[0418/113506.271:ERROR:gpu\ipc\service\gles2_command_buffer_stub.cc:109] ContextResult::kFatalFailure: fail_if_major_perf_caveat + software gl
+[0418/113506.471:ERROR:gpu\ipc\service\gles2_command_buffer_stub.cc:109] ContextResult::kFatalFailure: fail_if_major_perf_caveat + software gl
+[0418/113506.471:ERROR:gpu\ipc\service\gles2_command_buffer_stub.cc:109] ContextResult::kFatalFailure: fail_if_major_perf_caveat + software gl
+[14368:13088:0419/151103.028:WARNING:t_skinfilemap.cpp(56)] SGRenderLog:CheckUpdate newMem.OpenMem failed, szNewMem:Local\sgime_skin.v4.filemap.sogouime err:系统错误2: 系统找不到指定的文件。  
+打开Filemap失败: Local\sgime_skin.v4.filemap.sogouime3184863fd27
+[14368:13088:0419/151103.028:WARNING:t_skinfilemap.cpp(65)] SGRenderLog:CheckUpdate finish: old version:1
+[14368:13088:0419/151103.028:WARNING:t_skinfilemap.cpp(67)] SGRenderLog:CheckUpdate finish: new version:4
+[14368:13088:0419/151103.112:WARNING:t_skinfilemap.cpp(63)] SGRenderLog:CheckUpdate newMem.OpenMem Suc, szNewMem:Local\sgime_skin.Dpi120.v4.filemap.sogouime
+[14368:13088:0419/151103.112:WARNING:t_skinfilemap.cpp(65)] SGRenderLog:CheckUpdate finish: old version:4
+[14368:13088:0419/151103.112:WARNING:t_skinfilemap.cpp(67)] SGRenderLog:CheckUpdate finish: new version:4

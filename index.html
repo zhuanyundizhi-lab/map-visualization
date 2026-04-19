@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图数据可视化系统 - CloudBase版</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- 腾讯云开发 Web SDK - 最新版 -->
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+    
+    <!-- 高德地图 API - 使用 1.4.15 稳定版本 -->
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=7d2b907e4b78553551b0fac099d78230"></script>
+    <!-- 高德地图插件 -->
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=7d2b907e4b78553551b0fac099d78230&plugin=AMap.Scale,AMap.ToolBar,AMap.MarkerClusterer,AMap.Heatmap"></script>
+    <!-- SheetJS for Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- ECharts for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题栏 -->
+        <header class="header">
+            <h1>地图数据可视化系统</h1>
+            <div class="stats">
+                <span id="totalCount">总数据: 0</span>
+                <span id="filteredCount">筛选后: 0</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- 左侧控制面板 -->
+            <aside class="sidebar">
+                <!-- 本地数据操作 -->
+                <div class="panel">
+                    <h3>本地数据操作</h3>
+                    <div class="btn-group">
+                        <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            导入数据
+                        </button>
+                        <button class="btn btn-secondary" id="exportBtn">导出数据</button>
+                    </div>
+                </div>
+
+                <!-- 本地批次列表 -->
+                <div class="panel">
+                    <h3>本地批次 <span id="batchCount" style="font-size: 12px; color: #666;">(0)</span></h3>
+                    <div class="batch-list-header">
+                        <label class="batch-checkbox-all">
+                            <input type="checkbox" id="selectAllBatches" checked> 全选
+                        </label>
+                    </div>
+                    <div id="batchList" class="batch-list">
+                        <p style="color: #999; font-size: 12px; text-align: center; padding: 10px;">暂无本地批次</p>
+                    </div>
+                </div>
+
+                <!-- 云端数据库操作 -->
+                <div class="panel">
+                    <h3>云端数据库</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="importFromDbBtn" onclick="handleImportFromDb()">从数据库导入</button>
+                        <button class="btn btn-secondary" id="uploadToDbBtn" onclick="handleUploadToDb()">上传到数据库</button>
+                    </div>
+                    <p style="color: #999; font-size: 11px; margin-top: 8px;">从云端读取数据时会自动查重</p>
+                </div>
+
+                <!-- 云端批次列表 -->
+                <div class="panel">
+                    <h3>云端批次 <span id="cloudBatchCount" style="font-size: 12px; color: #666;">(0)</span></h3>
+                    <div id="cloudBatchList" class="batch-list">
+                        <p style="color: #999; font-size: 12px; text-align: center; padding: 10px;">点击"从数据库导入"查看云端批次</p>
+                    </div>
+                </div>
+
+                <!-- 地图模式切换 -->
+                <div class="panel">
+                    <h3>数据显示模式</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-mode active" id="markerMode">标记点模式</button>
+                        <button class="btn btn-mode" id="heatmapMode">热力图模式</button>
+                    </div>
+                </div>
+
+                <!-- 筛选面板 -->
+                <div class="panel">
+                    <h3>数据筛选</h3>
+                    
+                    <div class="filter-group">
+                        <label>所属区县</label>
+                        <select id="districtFilter" multiple>
+                            <option value="">全部区县</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>告警名称</label>
+                        <select id="alarmFilter" multiple>
+                            <option value="">全部告警</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>时间范围</label>
+                        <input type="date" id="startDate" placeholder="开始日期">
+                        <input type="date" id="endDate" placeholder="结束日期">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>重复出现数大于: <span id="repeatValue">0</span> 次</label>
+                        <input type="range" id="repeatFilter" min="0" max="10" value="0" step="1">
+                        <small style="color: #999; font-size: 11px;">只显示出现次数大于指定值的站点</small>
+                    </div>
+
+                    <button class="btn btn-primary" id="applyFilter">应用筛选</button>
+                    <button class="btn btn-secondary" id="resetFilter">重置筛选</button>
+                </div>
+
+                <!-- 热力图参数 -->
+                <div class="panel" id="heatmapPanel" style="display: none;">
+                    <h3>热力图参数</h3>
+                    <div class="filter-group">
+                        <label>半径: <span id="radiusValue">25</span></label>
+                        <input type="range" id="heatmapRadius" min="10" max="50" value="25">
+                    </div>
+                    <div class="filter-group">
+                        <label>透明度: <span id="opacityValue">0.6</span></label>
+                        <input type="range" id="heatmapOpacity" min="0.1" max="1" step="0.1" value="0.6">
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 地图区域 -->
+            <main class="map-container">
+                <div id="map"></div>
+                <!-- 地图图层切换 - 右上角 -->
+                <div class="map-layer-control">
+                    <button class="btn btn-mode active" id="normalMap">标准</button>
+                    <button class="btn btn-mode" id="satelliteMap">卫星</button>
+                </div>
+            </main>
+
+            <!-- 右侧时间统计图表 -->
+            <aside class="chart-sidebar">
+                <div class="chart-panel">
+                    <h3>时间分布统计</h3>
+                    <div class="chart-controls">
+                        <label>时间颗粒度:</label>
+                        <select id="timeGranularity">
+                            <option value="hour">按小时</option>
+                            <option value="day" selected>按天</option>
+                            <option value="week">按周</option>
+                            <option value="month">按月</option>
+                        </select>
+                    </div>
+                    <div id="timeChart" class="chart-container"></div>
+                    <div class="chart-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">起始时间:</span>
+                            <span id="chartStartTime" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">结束时间:</span>
+                            <span id="chartEndTime" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总数据量:</span>
+                            <span id="chartTotalCount" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- 数据详情弹窗 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>详细信息</h3>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- CloudBase 版本脚本 -->
+    <script src="js/coord-transform.js"></script>
+    <script src="js/cloudbase-config.js"></script>
+    <script src="js/data-cloudbase.js"></script>
+    <script src="js/filter.js"></script>
+    <script src="js/cloud-function-service.js"></script>
+    <script src="js/excel-cloudbase.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/time-chart.js"></script>
+    
+    <!-- 全局函数定义 - 放在 excel-cloudbase.js 之后 -->
+    <script>
+        // 等待 excelManager 初始化
+        function waitForExcelManager(callback, maxAttempts = 50) {
+            let attempts = 0;
+            const check = () => {
+                attempts++;
+                if (typeof excelManager !== 'undefined' && excelManager.importFromDatabase) {
+                    callback(true);
+                } else if (attempts < maxAttempts) {
+                    setTimeout(check, 100);
+                } else {
+                    callback(false);
+                }
+            };
+            check();
+        }
+
+        function handleImportFromDb() {
+            console.log('从数据库导入按钮被点击');
+            waitForExcelManager((loaded) => {
+                if (loaded) {
+                    excelManager.importFromDatabase();
+                } else {
+                    alert('Excel管理器加载超时，请刷新页面重试');
+                }
+            });
+        }
+        
+        function handleUploadToDb() {
+            console.log('上传到数据库按钮被点击');
+            waitForExcelManager((loaded) => {
+                if (loaded) {
+                    excelManager.uploadToDatabase();
+                } else {
+                    alert('Excel管理器加载超时，请刷新页面重试');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
